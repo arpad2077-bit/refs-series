@@ -1,0 +1,59 @@
+{
+  "site": {
+    "title": "Отсылки",
+    "subtitle": "Сериалы с пояснением отсылок"
+  },
+  "series": [
+    {
+      "id": "series-zwmf5yoln",
+      "title": "Новый сериал",
+      "poster": "",
+      "description": "",
+      "episodes": [
+        {
+          "id": "ep-st2b3ysac",
+          "number": 1,
+          "title": "Серия 1",
+          "description": "",
+          "video": {
+            "kind": "embed",
+            "ref": ""
+          },
+          "notes": [
+            {
+              "id": "note-i6hht4bua",
+              "t": 0,
+              "dur": 6,
+              "title": "",
+              "text": "",
+              "spoiler": false,
+              "links": []
+            },
+            {
+              "id": "note-crf313cua",
+              "t": 120,
+              "dur": 6,
+              "title": "bb",
+              "text": "fjf",
+              "spoiler": false,
+              "links": []
+            }
+          ],
+          "nextOverride": null
+        },
+        {
+          "id": "ep-qv14v864y",
+          "number": 2,
+          "title": "Серия 2",
+          "description": "",
+          "video": {
+            "kind": "embed",
+            "ref": "https://archive.org/details/bandicam-2026-11-16-20-40-13-176"
+          },
+          "notes": [],
+          "nextOverride": null
+        }
+      ]
+    }
+  ]
+}
