@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Отсылки</title>
+<meta name="description" content="Сериалы с пояснением каждой отсылки во время просмотра">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23141820'/%3E%3Cpath d='M8 9h16v3.5H8zm0 6h11v3.5H8zm0 6h16V24.5H8z' fill='%23ffbe55'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#/">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <span class="brand-text" id="brand-text">Отсылки</span>
+  </a>
+  <nav class="crumbs" id="crumbs" aria-label="Навигация"></nav>
+  <div class="topbar-actions">
+    <button class="ghost" id="btn-notes" type="button" aria-pressed="true">Пояснения: вкл</button>
+    <a class="ghost" href="admin.html">Админка</a>
+  </div>
+</header>
+
+<div class="preview-banner" id="preview-banner" hidden>
+  <strong>Демо-режим.</strong>
+  <span>Файл <code>data/data.json</code> не загрузился, показан тестовый контент из <code>js/data.js</code>.</span>
+</div>
+
+<main id="view" class="view"></main>
+
+<footer class="footer">
+  <span id="footer-text">Отсылки — пояснения к сериалам</span>
+  <a href="admin.html" class="ghost">Редактировать</a>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/store.js"></script>
+<script src="js/player.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

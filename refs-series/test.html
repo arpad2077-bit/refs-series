@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>Самопроверка</title>
+<style>body{font:14px monospace;background:#111;color:#ddd;padding:16px}
+.ok{color:#5fd08a}.bad{color:#ff6b6b}</style>
+</head>
+<body>
+<h1>Самопроверка</h1>
+<pre id="out"></pre>
+<script src="js/store.js"></script>
+<script src="js/player.js"></script>
+<script src="js/srt.js"></script>
+<script>
+var out = [];
+var fails = 0;
+function eq(name, actual, expected) {
+  var a = JSON.stringify(actual), e = JSON.stringify(expected);
+  var ok = a === e;
+  if (!ok) fails++;
+  out.push((ok ? 'OK   ' : 'FAIL ') + name + (ok ? '' : '  → получили ' + a + ', ждали ' + e));
+}
+var u = window.Refs.util;
+var P = window.Refs.player;
+
+/* время */
+eq('fmtTime 83.5', u.fmtTime(83.5), '1:23');
+eq('fmtTime 3723', u.fmtTime(3723), '1:02:03');
+eq('fmtTime 0', u.fmtTime(0), '0:00');
+eq('fmtTime NaN', u.fmtTime(NaN), '0:00');
+eq('parseTime 1:23', u.parseTime('1:23'), 83);
+eq('parseTime 1:02:03', u.parseTime('1:02:03'), 3723);
+eq('parseTime 83.5', u.parseTime(83.5), 83.5);
+eq('parseTime мусор', u.parseTime('abc'), 0);
+
+/* ссылки */
+eq('isHttpUrl ok', u.isHttpUrl('https://a.b/c'), true);
+eq('isHttpUrl javascript:', u.isHttpUrl('javascript:alert(1)'), false);
+eq('isHttpUrl пусто', u.isHttpUrl(''), false);
+
+/* нормализация */
+var n = u.normalizeNote({ t: '1:23', dur: 0, title: ' x ', links: [{kind:'bad', url:'https://a'}, {url:''}] });
+eq('note t', n.t, 83);
+eq('note dur по умолчанию', n.dur, 6);
+eq('note title триммится', n.title, 'x');
+eq('note плохая связь отброшена', n.links.length, 1);
+eq('note kind по умолчанию', n.links[0].kind, 'watch');
+
+var ep = u.normalizeEpisode({ number: '3', notes: [{t:10},{t:5}] });
+eq('episode number число', ep.number, 3);
+eq('episode notes сохранились', ep.notes.length, 2);
+
+var raw = u.normalize({ series: [{ title: 'B', episodes: [{number:2},{number:1}] }] });
+eq('серии сортируются по номеру', raw.series[0].episodes.map(function(e){return e.number;}), [1,2]);
+eq('пустые данные не падают', u.normalize(null).series.length, 0);
+
+/* YouTube id */
+eq('youtubeId чистый', P.youtubeId('aqz-KE-bpKQ'), 'aqz-KE-bpKQ');
+eq('youtubeId watch', P.youtubeId('https://www.youtube.com/watch?v=aqz-KE-bpKQ&t=5'), 'aqz-KE-bpKQ');
+eq('youtubeId youtu.be', P.youtubeId('https://youtu.be/aqz-KE-bpKQ'), 'aqz-KE-bpKQ');
+eq('youtubeId shorts', P.youtubeId('https://youtube.com/shorts/aqz-KE-bpKQ'), 'aqz-KE-bpKQ');
+eq('youtubeId мусор', P.youtubeId('нет ссылки'), '');
+
+/* ссылка с временем для встроенных плееров */
+eq('rutube t', P.embedUrlAtTime('https://rutube.ru/play/embed/abc/', 42),
+   'https://rutube.ru/play/embed/abc/?t=42');
+eq('vk t', P.embedUrlAtTime('https://vk.com/video_ext.php?oid=1', 42),
+   'https://vk.com/video_ext.php?oid=1&t=42s');
+eq('чужой хост не трогаем', P.embedUrlAtTime('https://example.com/e/1', 42),
+   'https://example.com/e/1');
+
+/* SRT */
+var srt = '1\n00:00:04,000 --> 00:00:09,000\nПервая реплика\n\n' +
+          '2\n00:00:16,500 --> 00:00:20,000\n<i>Вторая</i> реплика\nв две строки\n\n' +
+          '3\n00:01:10,000 --> 00:01:18,000\nТретья\n';
+var parsed = window.Refs.srt.parse(srt);
+eq('srt блоков', parsed.length, 3);
+eq('srt время 1', parsed[0].t, 4);
+eq('srt длительность 1', parsed[0].dur, 5);
+eq('srt время 2', parsed[1].t, 16.5);
+eq('srt теги сняты', parsed[1].text, 'Вторая реплика\nв две строки');
+eq('srt время 3', parsed[2].t, 70);
+
+var vtt = 'WEBVTT\n\n00:01.000 --> 00:03.000\nПривет\n';
+var parsedV = window.Refs.srt.parse(vtt);
+eq('vtt без часов', parsedV[0].t, 1);
+eq('vtt текст', parsedV[0].text, 'Привет');
+
+/* адаптеры без сети */
+var host = document.createElement('div');
+var broken = P.create(host, { kind: 'youtube', ref: 'не ссылка' });
+eq('битый источник не падает', broken.kind, 'broken');
+eq('битый источник без управления', broken.supportsControl, false);
+
+var host2 = document.createElement('div');
+var video = P.create(host2, { kind: 'file', ref: 'нет-такого.mp4' });
+eq('file адаптер управляемый', video.supportsControl, true);
+
+var host3 = document.createElement('div');
+var emb = P.create(host3, { kind: 'embed', ref: 'https://rutube.ru/play/embed/abc/' });
+eq('embed без управления', emb.supportsControl, false);
+eq('embed создал iframe', host3.querySelectorAll('iframe').length, 1);
+
+/* хранилище */
+eq('Store.normalize сохранил сайт', u.normalize({site:{title:'X'}}).site.title, 'X');
+
+/* отрезок внутри файла */
+var vc = u.normalizeEpisode({ video: { kind: 'file', ref: 'videos/a.mp4', clipStart: 12.5, clipEnd: 95 } });
+eq('отрезок: начало', vc.video.clipStart, 12.5);
+eq('отрезок: конец', vc.video.clipEnd, 95);
+var vcBad = u.normalizeEpisode({ video: { kind: 'file', ref: 'a.mp4', clipStart: 50, clipEnd: 10 } });
+eq('кривой отрезок: конец отброшен', vcBad.video.clipEnd, undefined);
+eq('кривой отрезок: начало осталось', vcBad.video.clipStart, 50);
+var vcYt = u.normalizeEpisode({ video: { kind: 'youtube', ref: 'aqz-KE-bpKQ', clipStart: 10 } });
+eq('у YouTube отрезков нет', vcYt.video.clipStart, undefined);
+
+var ad = P.create(document.createElement('div'),
+  { kind: 'file', ref: 'videos/a.mp4', clipStart: 10, clipEnd: 60 });
+eq('плеер знает начало отрезка', ad.clipStart, 10);
+eq('плеер знает конец отрезка', ad.clipEnd, 60);
+ad.ready = true;
+ad.duration = 50;
+eq('длительность = длина отрезка', ad.getDuration(), 50);
+
+/* путь с диска объясняется по-человечески */
+var win = P.create(document.createElement('div'), { kind: 'file', ref: 'C:\\Users\\arpad\\video.mp4' });
+eq('путь C:\\ распознан', win.kind, 'broken');
+eq('у пути C:\\ есть подсказка', /Выбрать видео на диске/.test(win.message), true);
+
+var pctrls = P.create(document.createElement('div'), { kind: 'file', ref: 'videos/ok.mp4' });
+eq('нормальный путь работает', pctrls.kind, 'file');
+
+/* вставка плеера с любого сайта */
+var pe1 = P.parseEmbed('<iframe width="720" height="405" src="https://www.griffinfan.ru/embed/12345" frameborder="0" allowfullscreen></iframe>');
+eq('код iframe: адрес вытащен', pe1.url, 'https://www.griffinfan.ru/embed/12345');
+eq('код iframe: сайт распознан', pe1.host, 'griffinfan.ru');
+
+var pe2 = P.parseEmbed('https://rutube.ru/play/embed/abc123/');
+eq('ссылка на плеер', pe2.url, 'https://rutube.ru/play/embed/abc123/');
+eq('rutube подписан', P.hostLabel(pe2.host), 'Rutube');
+
+var pe3 = P.parseEmbed('vk.com/video_ext.php?oid=1');
+eq('ссылка без https получает схему', pe3.url, 'https://vk.com/video_ext.php?oid=1');
+eq('vk подписан', P.hostLabel(pe3.host), 'VK Видео');
+
+var pe4 = P.parseEmbed('https://cdn.example.com/film.mp4?x=1');
+eq('прямая ссылка на файл', pe4.directVideo, true);
+
+var pe5 = P.parseEmbed('<video src="//cdn.example.com/a.webm"></video>');
+eq('протокол-относительный адрес', pe5.url, 'https://cdn.example.com/a.webm');
+eq('это видеофайл', pe5.directVideo, true);
+
+var pe6 = P.parseEmbed('просто текст без ссылки');
+eq('мусор не даёт адрес', pe6.url, 'просто текст без ссылки');
+
+var pe7 = P.parseEmbed('https://www.griffinfan.ru/serial/1/2');
+eq('обычная страница сайта принимается', pe7.url, 'https://www.griffinfan.ru/serial/1/2');
+eq('сайт без описания показывается как есть', P.hostLabel(pe7.host), 'griffinfan.ru');
+
+var embCreate = P.create(document.createElement('div'), { kind: 'embed', ref: 'https://www.griffinfan.ru/embed/1' });
+eq('вставка с сайта создаёт плеер', embCreate.kind, 'embed');
+eq('у такого плеера нет управления', embCreate.supportsControl, false);
+
+var embVideo = P.create(document.createElement('div'), { kind: 'embed', ref: 'https://cdn.example.com/f.mp4' });
+eq('прямая ссылка в embed играется как файл', embVideo.kind, 'file');
+eq('и управление есть', embVideo.supportsControl, true);
+
+document.getElementById('out').innerHTML =
+  out.map(function (line) {
+    return '<span class="' + (line.indexOf('OK') === 0 ? 'ok' : 'bad') + '">' + line + '</span>';
+  }).join('\n') + '\n\n' + (fails ? '<span class="bad">ПРОВАЛЕНО: ' + fails + '</span>' : '<span class="ok">Все проверки прошли</span>');
+</script>
+</body>
+</html>
