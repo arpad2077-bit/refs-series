@@ -50,7 +50,17 @@
             "kind": "embed",
             "ref": "https://archive.org/details/bandicam-2026-11-16-20-40-13-176"
           },
-          "notes": [],
+          "notes": [
+            {
+              "id": "note-jl7lb159k",
+              "t": 121,
+              "dur": 6,
+              "title": "1",
+              "text": "проверяю как работает\n",
+              "spoiler": false,
+              "links": []
+            }
+          ],
           "nextOverride": null
         }
       ]
