@@ -19,6 +19,19 @@
             "kind": "embed",
             "ref": ""
           },
+          "variants": [
+            {
+              "id": "var-wh9y6vozx",
+              "lang": "ru",
+              "subs": false,
+              "own": false,
+              "video": {
+                "kind": "youtube",
+                "ref": ""
+              }
+            }
+          ],
+          "subs": {},
           "notes": [
             {
               "id": "note-i6hht4bua",
@@ -50,6 +63,29 @@
             "kind": "embed",
             "ref": "https://archive.org/details/bandicam-2026-11-16-20-40-13-176"
           },
+          "variants": [
+            {
+              "id": "var-bf2qjvozx",
+              "lang": "ru",
+              "subs": false,
+              "own": false,
+              "video": {
+                "kind": "youtube",
+                "ref": ""
+              }
+            },
+            {
+              "id": "var-hyvvvwfnd",
+              "lang": "ru",
+              "subs": true,
+              "own": false,
+              "video": {
+                "kind": "file",
+                "ref": ""
+              }
+            }
+          ],
+          "subs": {},
           "notes": [
             {
               "id": "note-jl7lb159k",
